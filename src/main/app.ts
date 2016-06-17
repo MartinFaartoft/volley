@@ -1,4 +1,4 @@
-/// <reference path="piston-0.1.0.d.ts" />
+/// <reference path="piston-0.1.1.d.ts" />
 /// <reference path="volleystate.ts" />
 
 namespace volley {
