@@ -1,11 +1,20 @@
 /// <reference path="piston-0.1.1.d.ts" />
 
 namespace volley {
+    export enum PlayerDirection {
+            Left,
+            Right
+        }
+
     export class Player extends ps.Entity implements ps.Collidable {
         accel: number[] = [0, 900];
         isJumping: boolean = false;
 
-        constructor(pos: number[], public color: string, radius: number, public keys: string[]) {
+        constructor(pos: number[], 
+                    public color: string, 
+                    radius: number, 
+                    public keys: string[], 
+                    public direction: PlayerDirection) {
             super(pos, [0, 0], radius);
         }
 
@@ -13,6 +22,24 @@ namespace volley {
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI, true);
+            ctx.fill();
+
+            this.renderEye(ctx);
+        }
+
+        private renderEye(ctx: CanvasRenderingContext2D) {
+            let eyeX = this.pos[0] + ((this.radius / 2.0) * (this.direction === PlayerDirection.Right ? -1 : 1));
+            let eyeY = this.pos[1] - this.radius / 2.0
+            let pupilX = eyeX + 2 * (this.direction === PlayerDirection.Right ? -1 : 1);
+            let pupilY = eyeY;
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(pupilX, eyeY, 2, 0, Math.PI * 2);
             ctx.fill();
         }
 

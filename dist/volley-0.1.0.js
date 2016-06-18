@@ -18,7 +18,7 @@ var volley;
             this.collided = 0;
         }
         Ball.prototype.render = function (ctx, state) {
-            ctx.fillStyle = "red";
+            ctx.fillStyle = "orange";
             ctx.beginPath();
             ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -117,12 +117,18 @@ var volley;
 /// <reference path="piston-0.1.1.d.ts" />
 var volley;
 (function (volley) {
+    (function (PlayerDirection) {
+        PlayerDirection[PlayerDirection["Left"] = 0] = "Left";
+        PlayerDirection[PlayerDirection["Right"] = 1] = "Right";
+    })(volley.PlayerDirection || (volley.PlayerDirection = {}));
+    var PlayerDirection = volley.PlayerDirection;
     var Player = (function (_super) {
         __extends(Player, _super);
-        function Player(pos, color, radius, keys) {
+        function Player(pos, color, radius, keys, direction) {
             _super.call(this, pos, [0, 0], radius);
             this.color = color;
             this.keys = keys;
+            this.direction = direction;
             this.accel = [0, 900];
             this.isJumping = false;
         }
@@ -130,6 +136,21 @@ var volley;
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI, true);
+            ctx.fill();
+            this.renderEye(ctx);
+        };
+        Player.prototype.renderEye = function (ctx) {
+            var eyeX = this.pos[0] + ((this.radius / 2.0) * (this.direction === PlayerDirection.Right ? -1 : 1));
+            var eyeY = this.pos[1] - this.radius / 2.0;
+            var pupilX = eyeX + 2 * (this.direction === PlayerDirection.Right ? -1 : 1);
+            var pupilY = eyeY;
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc(pupilX, eyeY, 2, 0, Math.PI * 2);
             ctx.fill();
         };
         Player.prototype.update = function (dt, state) {
@@ -182,8 +203,8 @@ var volley;
             this.dimensions = dimensions;
             this.debug = debug;
             this.ball = new volley.Ball([500, 100], [200, 0], [0, 400], 50);
-            this.leftPlayer = new volley.Player([200, 768], "green", 50, ["a", "d", "w"]);
-            this.rightPlayer = new volley.Player([890, 768], "blue", 50, ["LEFT", "RIGHT", "UP"]);
+            this.leftPlayer = new volley.Player([200, 768], "green", 50, ["a", "d", "w"], volley.PlayerDirection.Left);
+            this.rightPlayer = new volley.Player([890, 768], "blue", 50, ["LEFT", "RIGHT", "UP"], volley.PlayerDirection.Right);
         }
         VolleyState.prototype.render = function (ctx) {
             ctx.fillStyle = "black";

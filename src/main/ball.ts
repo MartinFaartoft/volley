@@ -12,7 +12,7 @@ namespace volley {
         }
 
         render(ctx: CanvasRenderingContext2D, state: VolleyState) {
-            ctx.fillStyle = "red";
+            ctx.fillStyle = "orange";
             ctx.beginPath();
             ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI * 2);
             ctx.fill();

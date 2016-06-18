@@ -19,13 +19,19 @@ declare namespace volley {
     }
 }
 declare namespace volley {
+    enum PlayerDirection {
+        Left = 0,
+        Right = 1,
+    }
     class Player extends ps.Entity implements ps.Collidable {
         color: string;
         keys: string[];
+        direction: PlayerDirection;
         accel: number[];
         isJumping: boolean;
-        constructor(pos: number[], color: string, radius: number, keys: string[]);
+        constructor(pos: number[], color: string, radius: number, keys: string[], direction: PlayerDirection);
         render(ctx: CanvasRenderingContext2D, state: VolleyState): void;
+        private renderEye(ctx);
         update(dt: number, state: VolleyState): void;
         accelerate(dt: number): void;
         collideWith(other: ps.Collidable): void;
