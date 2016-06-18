@@ -1,4 +1,4 @@
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 /// <reference path="volleystate.ts" />
 
 namespace volley {
@@ -11,7 +11,7 @@ namespace volley {
 
     // prepare game state and engine
     let debug = false;
-    let dimensions = [canvas.width, canvas.height];
+    let dimensions = new ps.Vector(canvas.width, canvas.height);
     //let resourceManager: ps.ResourceManager = new ps.ResourceManager();
     let state: VolleyState = new VolleyState(dimensions, debug);
     let engine: ps.Engine = new ps.Engine(state, ctx, debug);

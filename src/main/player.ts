@@ -1,4 +1,4 @@
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 
 namespace volley {
     export enum PlayerDirection {
@@ -7,29 +7,30 @@ namespace volley {
         }
 
     export class Player extends ps.Entity implements ps.Collidable {
-        accel: number[] = [0, 900];
+        accel: ps.Vector = new ps.Vector(0, 900);
         isJumping: boolean = false;
+        mass: number = 100;
 
-        constructor(pos: number[], 
+        constructor(pos: ps.Point, 
                     public color: string, 
                     radius: number, 
                     public keys: string[], 
                     public direction: PlayerDirection) {
-            super(pos, [0, 0], radius);
+            super(pos, new ps.Vector(0, 0), radius);
         }
 
         render(ctx: CanvasRenderingContext2D, state: VolleyState) {
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI, true);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI, true);
             ctx.fill();
 
             this.renderEye(ctx);
         }
 
         private renderEye(ctx: CanvasRenderingContext2D) {
-            let eyeX = this.pos[0] + ((this.radius / 2.0) * (this.direction === PlayerDirection.Right ? -1 : 1));
-            let eyeY = this.pos[1] - this.radius / 2.0
+            let eyeX = this.pos.x + ((this.radius / 2.0) * (this.direction === PlayerDirection.Right ? -1 : 1));
+            let eyeY = this.pos.y - this.radius / 2.0
             let pupilX = eyeX + 2 * (this.direction === PlayerDirection.Right ? -1 : 1);
             let pupilY = eyeY;
             ctx.fillStyle = "white";
@@ -45,40 +46,40 @@ namespace volley {
 
         update(dt: number, state: VolleyState) {
             if (this.isJumping) {
-                if (this.pos[1] < state.dimensions[1]) {
+                if (this.pos.y < state.dimensions.y) {
                     this.accelerate(dt);
                 } else { //jump is over
-                    this.speed[1] = 0;
-                    this.pos[1] = state.dimensions[1];
+                    this.speed.y = 0;
+                    this.pos.y = state.dimensions.y;
                     this.isJumping = false;
                 }
             }
 
-            this.pos[0] += this.speed[0] * dt;
-            this.pos[1] += this.speed[1] * dt;
+            this.pos.x += this.speed.x * dt;
+            this.pos.y += this.speed.y * dt;
         }
 
          accelerate(dt: number) {
-            this.speed[0] += this.accel[0] * dt;
-            this.speed[1] += this.accel[1] * dt;
+            this.speed.x += this.accel.x * dt;
+            this.speed.y += this.accel.y * dt;
         }
 
         collideWith(other: ps.Collidable) {}
 
         handleInput() {
-            this.speed[0] = 0;
+            this.speed.x = 0;
             if (ps.isKeyDown(this.keys[0])) {
-                this.speed[0] = -300;
+                this.speed.x = -300;
             }
             else if (ps.isKeyDown(this.keys[1])) {
-                this.speed[0] = 300;
+                this.speed.x = 300;
             }
             
             if (ps.isKeyDown(this.keys[2])) {
                 if (!this.isJumping) {
                     this.isJumping = true;
-                    this.speed[1] = -300;
-                    this.pos[1] -= 1;
+                    this.speed.y = -300;
+                    this.pos.y -= 1;
                 }
             }
         }

@@ -11,18 +11,18 @@ namespace volley {
         net: Net;
         netTop: NetTop;
 
-        constructor(public dimensions: number[], public debug: boolean) {
+        constructor(public dimensions: ps.Vector, public debug: boolean) {
             super(dimensions);
-            this.ball = new Ball([500, 100], [200, 0], [0, 400], 50);
-            this.leftPlayer = new Player([200, 768], "green", 50, ["a", "d", "w"], PlayerDirection.Left);
-            this.rightPlayer = new Player([890, 768], "blue", 50, ["LEFT", "RIGHT", "UP"], PlayerDirection.Right);
+            this.ball = new Ball(new ps.Point(500, 100), new ps.Vector(200, 0), new ps.Vector(0, 400), 50);
+            this.leftPlayer = new Player(new ps.Point(200, 768), "green", 50, ["a", "d", "w"], PlayerDirection.Left);
+            this.rightPlayer = new Player(new ps.Point(890, 768), "blue", 50, ["LEFT", "RIGHT", "UP"], PlayerDirection.Right);
             this.net = new Net();
             this.netTop = new NetTop();
         }
 
         render(ctx: CanvasRenderingContext2D) {
             ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
+            ctx.fillRect(0, 0, this.dimensions.x, this.dimensions.y);
             this.net.render(ctx);
             this.netTop.render(ctx);
             this.ball.render(ctx, this);

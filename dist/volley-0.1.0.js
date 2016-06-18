@@ -3,7 +3,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 /// <reference path="volleystate.ts" />
 var volley;
 (function (volley) {
@@ -12,15 +12,15 @@ var volley;
         function Ball(pos, speed, accel, radius) {
             _super.call(this, pos, speed, radius);
             this.pos = pos;
-            this.speed = speed;
             this.accel = accel;
-            this.friction = [0.0001, .001];
+            this.friction = new ps.Vector(0.0001, .001);
             this.collided = 0;
+            this.mass = 25;
         }
         Ball.prototype.render = function (ctx, state) {
             ctx.fillStyle = "orange";
             ctx.beginPath();
-            ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI * 2);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
         };
         Ball.prototype.update = function (dt, state) {
@@ -32,41 +32,39 @@ var volley;
             this.accelerate(dt);
         };
         Ball.prototype.accelerate = function (dt) {
-            this.speed[0] += this.accel[0] * dt;
-            this.speed[1] += this.accel[1] * dt;
+            this.speed = this.speed.add(this.accel.multiply(dt));
             //apply friction
-            this.speed[0] *= 1 - this.friction[0];
-            this.speed[1] *= 1 - this.friction[1];
-            this.pos[0] += this.speed[0] * dt;
-            this.pos[1] += this.speed[1] * dt;
+            this.speed.x *= 1 - this.friction.x;
+            this.speed.y *= 1 - this.friction.y;
+            this.pos = this.pos.add(this.speed.multiply(dt));
         };
         Ball.prototype.checkNetCollision = function (state) {
             if (this.collided > 0) {
                 return;
             }
-            var netX = state.net.pos[0];
-            var netY = state.net.pos[1] - volley.Net.HEIGHT;
-            var xOverlap = this.pos[0] > netX - this.radius && this.pos[0] < netX + this.radius + volley.Net.THICKNESS;
-            var yOverlap = this.pos[1] > netY - this.radius + 20 && this.pos[1] < state.net.pos[1];
+            var netX = state.net.pos.x;
+            var netY = state.net.pos.y - volley.Net.HEIGHT;
+            var xOverlap = this.pos.x > netX - this.radius && this.pos.x < netX + this.radius + volley.Net.THICKNESS;
+            var yOverlap = this.pos.y > netY - this.radius + 20 && this.pos.y < state.net.pos.y;
             if (xOverlap && yOverlap) {
-                this.speed[0] *= -1;
+                this.speed.x *= -1;
                 this.collided = .1;
             }
         };
         Ball.prototype.checkWallCollisions = function (state) {
             //if overlapping floor and moving down
-            if (this.pos[1] + this.radius >= state.dimensions[1] && this.speed[1] > 0) {
-                this.speed[1] *= -1;
+            if (this.pos.y + this.radius >= state.dimensions.y && this.speed.y > 0) {
+                this.speed.y *= -1;
             } //if overlapping ceiling and moving up 
-            else if (this.pos[1] - this.radius < 0 && this.speed[1] < 0) {
-                this.speed[1] *= -1;
+            else if (this.pos.y - this.radius < 0 && this.speed.y < 0) {
+                this.speed.y *= -1;
             }
             //if overlapping left wall and moving left
-            if (this.pos[0] - this.radius < 0 && this.speed[0] < 0) {
-                this.speed[0] *= -1;
+            if (this.pos.x - this.radius < 0 && this.speed.x < 0) {
+                this.speed.x *= -1;
             } //if overlapping right wall and moving right
-            else if (this.pos[0] + this.radius > state.dimensions[0] && this.speed[0] > 0) {
-                this.speed[0] *= -1;
+            else if (this.pos.x + this.radius > state.dimensions.x && this.speed.x > 0) {
+                this.speed.x *= -1;
             }
         };
         //http://vobarian.com/collisions/2dcollisions2.pdf
@@ -76,10 +74,10 @@ var volley;
             }
             this.collided = .1;
             var m0 = 25, m1 = 100; //masses
-            var x0 = this.pos[0];
-            var y0 = this.pos[1];
-            var x1 = other.pos[0];
-            var y1 = other.pos[1];
+            var x0 = this.pos.x;
+            var y0 = this.pos.y;
+            var x1 = other.pos.x;
+            var y1 = other.pos.y;
             //1: find unit normal and unit tangent vectors
             var normal = [x1 - x0, y1 - y0];
             var normal_magnitude = this.magnitude(normal);
@@ -89,8 +87,8 @@ var volley;
             ];
             var unit_tangent = [-unit_normal[1], unit_normal[0]];
             //2: create initial velocity vectors
-            var v0 = [this.speed[0], this.speed[1]];
-            var v1 = [other.speed[0], other.speed[1]];
+            var v0 = [this.speed.x, this.speed.y];
+            var v1 = [other.speed.x, other.speed.y];
             //3: calculate scalar velocities in the normal and tangential direction for both
             var scalar_v0_n = this.dotProduct(unit_normal, v0);
             var scalar_v0_t = this.dotProduct(unit_tangent, v0);
@@ -110,7 +108,7 @@ var volley;
             //7: find final velocity vectors by adding normal and tangential components
             var post_v0 = this.add(post_v0_n, post_v0_t);
             var post_v1 = this.add(post_v1_n, post_v1_t);
-            this.speed = [post_v0[0], post_v0[1]];
+            this.speed = new ps.Vector(post_v0[0], post_v0[1]);
         };
         Ball.prototype.add = function (a, b) {
             return [a[0] + b[0], a[1] + b[1]];
@@ -128,7 +126,7 @@ var volley;
     }(ps.Entity));
     volley.Ball = Ball;
 })(volley || (volley = {}));
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 var volley;
 (function (volley) {
     (function (PlayerDirection) {
@@ -139,23 +137,24 @@ var volley;
     var Player = (function (_super) {
         __extends(Player, _super);
         function Player(pos, color, radius, keys, direction) {
-            _super.call(this, pos, [0, 0], radius);
+            _super.call(this, pos, new ps.Vector(0, 0), radius);
             this.color = color;
             this.keys = keys;
             this.direction = direction;
-            this.accel = [0, 900];
+            this.accel = new ps.Vector(0, 900);
             this.isJumping = false;
+            this.mass = 100;
         }
         Player.prototype.render = function (ctx, state) {
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI, true);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI, true);
             ctx.fill();
             this.renderEye(ctx);
         };
         Player.prototype.renderEye = function (ctx) {
-            var eyeX = this.pos[0] + ((this.radius / 2.0) * (this.direction === PlayerDirection.Right ? -1 : 1));
-            var eyeY = this.pos[1] - this.radius / 2.0;
+            var eyeX = this.pos.x + ((this.radius / 2.0) * (this.direction === PlayerDirection.Right ? -1 : 1));
+            var eyeY = this.pos.y - this.radius / 2.0;
             var pupilX = eyeX + 2 * (this.direction === PlayerDirection.Right ? -1 : 1);
             var pupilY = eyeY;
             ctx.fillStyle = "white";
@@ -169,36 +168,36 @@ var volley;
         };
         Player.prototype.update = function (dt, state) {
             if (this.isJumping) {
-                if (this.pos[1] < state.dimensions[1]) {
+                if (this.pos.y < state.dimensions.y) {
                     this.accelerate(dt);
                 }
                 else {
-                    this.speed[1] = 0;
-                    this.pos[1] = state.dimensions[1];
+                    this.speed.y = 0;
+                    this.pos.y = state.dimensions.y;
                     this.isJumping = false;
                 }
             }
-            this.pos[0] += this.speed[0] * dt;
-            this.pos[1] += this.speed[1] * dt;
+            this.pos.x += this.speed.x * dt;
+            this.pos.y += this.speed.y * dt;
         };
         Player.prototype.accelerate = function (dt) {
-            this.speed[0] += this.accel[0] * dt;
-            this.speed[1] += this.accel[1] * dt;
+            this.speed.x += this.accel.x * dt;
+            this.speed.y += this.accel.y * dt;
         };
         Player.prototype.collideWith = function (other) { };
         Player.prototype.handleInput = function () {
-            this.speed[0] = 0;
+            this.speed.x = 0;
             if (ps.isKeyDown(this.keys[0])) {
-                this.speed[0] = -300;
+                this.speed.x = -300;
             }
             else if (ps.isKeyDown(this.keys[1])) {
-                this.speed[0] = 300;
+                this.speed.x = 300;
             }
             if (ps.isKeyDown(this.keys[2])) {
                 if (!this.isJumping) {
                     this.isJumping = true;
-                    this.speed[1] = -300;
-                    this.pos[1] -= 1;
+                    this.speed.y = -300;
+                    this.pos.y -= 1;
                 }
             }
         };
@@ -206,17 +205,17 @@ var volley;
     }(ps.Entity));
     volley.Player = Player;
 })(volley || (volley = {}));
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 var volley;
 (function (volley) {
     var Net = (function (_super) {
         __extends(Net, _super);
         function Net() {
-            _super.call(this, [1024 / 2.0, 768], [0, 0], 0);
+            _super.call(this, new ps.Point(1024 / 2.0, 768), new ps.Vector(0, 0), 0);
         }
         Net.prototype.render = function (ctx) {
             ctx.fillStyle = "purple";
-            ctx.fillRect(this.pos[0], this.pos[1], Net.THICKNESS, -Net.HEIGHT);
+            ctx.fillRect(this.pos.x, this.pos.y, Net.THICKNESS, -Net.HEIGHT);
         };
         Net.HEIGHT = 300;
         Net.THICKNESS = 10;
@@ -224,18 +223,19 @@ var volley;
     }(ps.Entity));
     volley.Net = Net;
 })(volley || (volley = {}));
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 var volley;
 (function (volley) {
     var NetTop = (function (_super) {
         __extends(NetTop, _super);
         function NetTop() {
-            _super.call(this, [1024 / 2.0 + NetTop.RADIUS, 768 - volley.Net.HEIGHT], [0, 0], NetTop.RADIUS);
+            _super.call(this, new ps.Point(1024 / 2.0 + NetTop.RADIUS, 768 - volley.Net.HEIGHT), new ps.Vector(0, 0), NetTop.RADIUS);
+            this.mass = 100;
         }
         NetTop.prototype.render = function (ctx) {
             ctx.fillStyle = "purple";
             ctx.beginPath();
-            ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI * 2);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
         };
         NetTop.prototype.collideWith = function (other) { };
@@ -256,15 +256,15 @@ var volley;
             _super.call(this, dimensions);
             this.dimensions = dimensions;
             this.debug = debug;
-            this.ball = new volley.Ball([500, 100], [200, 0], [0, 400], 50);
-            this.leftPlayer = new volley.Player([200, 768], "green", 50, ["a", "d", "w"], volley.PlayerDirection.Left);
-            this.rightPlayer = new volley.Player([890, 768], "blue", 50, ["LEFT", "RIGHT", "UP"], volley.PlayerDirection.Right);
+            this.ball = new volley.Ball(new ps.Point(500, 100), new ps.Vector(200, 0), new ps.Vector(0, 400), 50);
+            this.leftPlayer = new volley.Player(new ps.Point(200, 768), "green", 50, ["a", "d", "w"], volley.PlayerDirection.Left);
+            this.rightPlayer = new volley.Player(new ps.Point(890, 768), "blue", 50, ["LEFT", "RIGHT", "UP"], volley.PlayerDirection.Right);
             this.net = new volley.Net();
             this.netTop = new volley.NetTop();
         }
         VolleyState.prototype.render = function (ctx) {
             ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
+            ctx.fillRect(0, 0, this.dimensions.x, this.dimensions.y);
             this.net.render(ctx);
             this.netTop.render(ctx);
             this.ball.render(ctx, this);
@@ -285,7 +285,7 @@ var volley;
     }(ps.BaseGameState));
     volley.VolleyState = VolleyState;
 })(volley || (volley = {}));
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 /// <reference path="volleystate.ts" />
 var volley;
 (function (volley) {
@@ -297,7 +297,7 @@ var volley;
     document.body.appendChild(canvas);
     // prepare game state and engine
     var debug = false;
-    var dimensions = [canvas.width, canvas.height];
+    var dimensions = new ps.Vector(canvas.width, canvas.height);
     //let resourceManager: ps.ResourceManager = new ps.ResourceManager();
     var state = new volley.VolleyState(dimensions, debug);
     var engine = new ps.Engine(state, ctx, debug);

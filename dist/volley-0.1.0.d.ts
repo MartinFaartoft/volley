@@ -1,12 +1,12 @@
-/// <reference path="../src/main/piston-0.1.1.d.ts" />
+/// <reference path="../src/main/piston-0.2.0.d.ts" />
 declare namespace volley {
     class Ball extends ps.Entity implements ps.Collidable {
-        pos: number[];
-        speed: number[];
-        accel: number[];
-        friction: number[];
+        pos: ps.Point;
+        accel: ps.Vector;
+        friction: ps.Vector;
         collided: number;
-        constructor(pos: number[], speed: number[], accel: number[], radius: number);
+        mass: number;
+        constructor(pos: ps.Point, speed: ps.Vector, accel: ps.Vector, radius: number);
         render(ctx: CanvasRenderingContext2D, state: VolleyState): void;
         update(dt: number, state: VolleyState): void;
         accelerate(dt: number): void;
@@ -28,9 +28,10 @@ declare namespace volley {
         color: string;
         keys: string[];
         direction: PlayerDirection;
-        accel: number[];
+        accel: ps.Vector;
         isJumping: boolean;
-        constructor(pos: number[], color: string, radius: number, keys: string[], direction: PlayerDirection);
+        mass: number;
+        constructor(pos: ps.Point, color: string, radius: number, keys: string[], direction: PlayerDirection);
         render(ctx: CanvasRenderingContext2D, state: VolleyState): void;
         private renderEye(ctx);
         update(dt: number, state: VolleyState): void;
@@ -50,6 +51,7 @@ declare namespace volley {
 declare namespace volley {
     class NetTop extends ps.Entity implements ps.Collidable {
         static RADIUS: number;
+        mass: number;
         constructor();
         render(ctx: CanvasRenderingContext2D): void;
         collideWith(other: ps.Collidable): void;
@@ -57,14 +59,14 @@ declare namespace volley {
 }
 declare namespace volley {
     class VolleyState extends ps.BaseGameState {
-        dimensions: number[];
+        dimensions: ps.Vector;
         debug: boolean;
         ball: Ball;
         leftPlayer: Player;
         rightPlayer: Player;
         net: Net;
         netTop: NetTop;
-        constructor(dimensions: number[], debug: boolean);
+        constructor(dimensions: ps.Vector, debug: boolean);
         render(ctx: CanvasRenderingContext2D): void;
         update(dt: number): void;
     }

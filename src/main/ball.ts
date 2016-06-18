@@ -1,20 +1,21 @@
-/// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="piston-0.2.0.d.ts" />
 /// <reference path="volleystate.ts" />
 
 
 namespace volley {
     export class Ball extends ps.Entity implements ps.Collidable {
-        friction: number[] = [0.0001, .001];
+        friction: ps.Vector = new ps.Vector(0.0001, .001);
         collided: number = 0;
+        mass: number = 25;
 
-        constructor(public pos: number[], public speed: number[], public accel: number[], radius: number) {
+        constructor(public pos: ps.Point, speed: ps.Vector, public accel: ps.Vector, radius: number) {
             super(pos, speed, radius);
         }
 
         render(ctx: CanvasRenderingContext2D, state: VolleyState) {
             ctx.fillStyle = "orange";
             ctx.beginPath();
-            ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI * 2);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -29,49 +30,47 @@ namespace volley {
         }
 
         accelerate(dt: number) {
-            this.speed[0] += this.accel[0] * dt;
-            this.speed[1] += this.accel[1] * dt;
+            this.speed = this.speed.add(this.accel.multiply(dt));
 
             //apply friction
-            this.speed[0] *= 1 - this.friction[0];
-            this.speed[1] *= 1 - this.friction[1];
+            this.speed.x *= 1 - this.friction.x;
+            this.speed.y *= 1 - this.friction.y;
 
-            this.pos[0] += this.speed[0] * dt;
-            this.pos[1] += this.speed[1] * dt;
+            this.pos = this.pos.add(this.speed.multiply(dt));
         }
 
         checkNetCollision(state: VolleyState) {
             if (this.collided > 0) {
                 return;
             }
-            let netX: number = state.net.pos[0];
-            let netY: number = state.net.pos[1] - Net.HEIGHT;
+            let netX: number = state.net.pos.x;
+            let netY: number = state.net.pos.y - Net.HEIGHT;
 
-            let xOverlap: boolean = this.pos[0] > netX - this.radius && this.pos[0] < netX + this.radius + Net.THICKNESS;
-            let yOverlap: boolean = this.pos[1] > netY - this.radius + 20 && this.pos[1] < state.net.pos[1];
+            let xOverlap: boolean = this.pos.x > netX - this.radius && this.pos.x < netX + this.radius + Net.THICKNESS;
+            let yOverlap: boolean = this.pos.y > netY - this.radius + 20 && this.pos.y < state.net.pos.y;
 
             if (xOverlap && yOverlap) {
-                this.speed[0] *= -1;
+                this.speed.x *= -1;
                 this.collided = .1;
             }
         }
 
         checkWallCollisions(state: VolleyState) {
             //if overlapping floor and moving down
-            if (this.pos[1] + this.radius >= state.dimensions[1] && this.speed[1] > 0) {
-                this.speed[1] *= -1;
+            if (this.pos.y + this.radius >= state.dimensions.y && this.speed.y > 0) {
+                this.speed.y *= -1;
             } //if overlapping ceiling and moving up 
-            else if (this.pos[1] - this.radius < 0 && this.speed[1] < 0) {
-                this.speed[1] *= -1;
+            else if (this.pos.y - this.radius < 0 && this.speed.y < 0) {
+                this.speed.y *= -1;
             }
 
             //if overlapping left wall and moving left
-            if (this.pos[0] - this.radius < 0 && this.speed[0] < 0) {
-                this.speed[0] *= -1;
+            if (this.pos.x - this.radius < 0 && this.speed.x < 0) {
+                this.speed.x *= -1;
             } //if overlapping right wall and moving right
-            else if (this.pos[0] + this.radius > state.dimensions[0] && this.speed[0] > 0) {
-                this.speed[0] *= -1;
-            }            
+            else if (this.pos.x + this.radius > state.dimensions.x && this.speed.x > 0) {
+                this.speed.x *= -1;
+            }
         }
 
         //http://vobarian.com/collisions/2dcollisions2.pdf
@@ -84,11 +83,11 @@ namespace volley {
 
             let m0 = 25, m1 = 100; //masses
             
-            let x0 = this.pos[0];
-            let y0 = this.pos[1];
+            let x0 = this.pos.x;
+            let y0 = this.pos.y;
 
-            let x1 = other.pos[0];
-            let y1 = other.pos[1];
+            let x1 = other.pos.x;
+            let y1 = other.pos.y;
             //1: find unit normal and unit tangent vectors
             let normal = [x1 - x0, y1 - y0];
             let normal_magnitude = this.magnitude(normal);
@@ -100,8 +99,8 @@ namespace volley {
             let unit_tangent = [-unit_normal[1], unit_normal[0]];
 
             //2: create initial velocity vectors
-            let v0 = [this.speed[0], this.speed[1]];
-            let v1 = [other.speed[0], other.speed[1]];
+            let v0 = [this.speed.x, this.speed.y];
+            let v1 = [other.speed.x, other.speed.y];
 
             //3: calculate scalar velocities in the normal and tangential direction for both
             let scalar_v0_n = this.dotProduct(unit_normal, v0);
@@ -129,7 +128,7 @@ namespace volley {
             let post_v0 = this.add(post_v0_n, post_v0_t);
             let post_v1 = this.add(post_v1_n, post_v1_t);
 
-            this.speed = [post_v0[0], post_v0[1]];
+            this.speed = new ps.Vector(post_v0[0], post_v0[1]);
         }
 
         add(a: number[], b: number[]): number[] {
