@@ -19,11 +19,13 @@ namespace volley {
         }
 
         update(dt: number, state: VolleyState) {
-            this.accelerate(dt);
             this.checkWallCollisions(state);
+            this.checkNetCollision(state);
             if (this.collided > 0) {
                 this.collided -= dt;
             }
+
+            this.accelerate(dt);
         }
 
         accelerate(dt: number) {
@@ -36,6 +38,22 @@ namespace volley {
 
             this.pos[0] += this.speed[0] * dt;
             this.pos[1] += this.speed[1] * dt;
+        }
+
+        checkNetCollision(state: VolleyState) {
+            if (this.collided > 0) {
+                return;
+            }
+            let netX: number = state.net.pos[0];
+            let netY: number = state.net.pos[1] - Net.HEIGHT;
+
+            let xOverlap: boolean = this.pos[0] > netX - this.radius && this.pos[0] < netX + this.radius + Net.THICKNESS;
+            let yOverlap: boolean = this.pos[1] > netY - this.radius + 20 && this.pos[1] < state.net.pos[1];
+
+            if (xOverlap && yOverlap) {
+                this.speed[0] *= -1;
+                this.collided = .1;
+            }
         }
 
         checkWallCollisions(state: VolleyState) {
@@ -55,6 +73,7 @@ namespace volley {
                 this.speed[0] *= -1;
             }            
         }
+
         //http://vobarian.com/collisions/2dcollisions2.pdf
         collideWith(other: Player) {
             if (this.collided > 0) {
@@ -63,7 +82,7 @@ namespace volley {
 
             this.collided = .1;
 
-            let m0 = 10, m1 = 100; //masses
+            let m0 = 25, m1 = 100; //masses
             
             let x0 = this.pos[0];
             let y0 = this.pos[1];

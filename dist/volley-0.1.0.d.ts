@@ -10,6 +10,7 @@ declare namespace volley {
         render(ctx: CanvasRenderingContext2D, state: VolleyState): void;
         update(dt: number, state: VolleyState): void;
         accelerate(dt: number): void;
+        checkNetCollision(state: VolleyState): void;
         checkWallCollisions(state: VolleyState): void;
         collideWith(other: Player): void;
         add(a: number[], b: number[]): number[];
@@ -39,12 +40,30 @@ declare namespace volley {
     }
 }
 declare namespace volley {
+    class Net extends ps.Entity {
+        static HEIGHT: number;
+        static THICKNESS: number;
+        constructor();
+        render(ctx: CanvasRenderingContext2D): void;
+    }
+}
+declare namespace volley {
+    class NetTop extends ps.Entity implements ps.Collidable {
+        static RADIUS: number;
+        constructor();
+        render(ctx: CanvasRenderingContext2D): void;
+        collideWith(other: ps.Collidable): void;
+    }
+}
+declare namespace volley {
     class VolleyState extends ps.BaseGameState {
         dimensions: number[];
         debug: boolean;
         ball: Ball;
         leftPlayer: Player;
         rightPlayer: Player;
+        net: Net;
+        netTop: NetTop;
         constructor(dimensions: number[], debug: boolean);
         render(ctx: CanvasRenderingContext2D): void;
         update(dt: number): void;
