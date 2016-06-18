@@ -22,20 +22,24 @@ declare namespace volley {
     class Player extends ps.Entity implements ps.Collidable {
         color: string;
         keys: string[];
+        accel: number[];
+        isJumping: boolean;
         constructor(pos: number[], color: string, radius: number, keys: string[]);
         render(ctx: CanvasRenderingContext2D, state: VolleyState): void;
+        update(dt: number, state: VolleyState): void;
+        accelerate(dt: number): void;
         collideWith(other: ps.Collidable): void;
         handleInput(): void;
     }
 }
 declare namespace volley {
     class VolleyState extends ps.BaseGameState {
-        dimsensions: number[];
+        dimensions: number[];
         debug: boolean;
         ball: Ball;
         leftPlayer: Player;
         rightPlayer: Player;
-        constructor(dimsensions: number[], debug: boolean);
+        constructor(dimensions: number[], debug: boolean);
         render(ctx: CanvasRenderingContext2D): void;
         update(dt: number): void;
     }

@@ -1,12 +1,10 @@
-/*! volley - v0.1.0 - 2016-06-17
-* https://github.com/martinfaartoft/
-* Copyright (c) 2016 Piston.js <martin.faartoft@gmail.com>; Licensed MIT*/
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="volleystate.ts" />
 var volley;
 (function (volley) {
     var Ball = (function (_super) {
@@ -44,7 +42,10 @@ var volley;
         Ball.prototype.checkWallCollisions = function (state) {
             //if overlapping floor and moving down
             if (this.pos[1] + this.radius >= state.dimensions[1] && this.speed[1] > 0) {
-                this.speed[1] = this.speed[1] * -1;
+                this.speed[1] *= -1;
+            } //if overlapping ceiling and moving up 
+            else if (this.pos[1] - this.radius < 0 && this.speed[1] < 0) {
+                this.speed[1] *= -1;
             }
             //if overlapping left wall and moving left
             if (this.pos[0] - this.radius < 0 && this.speed[0] < 0) {
@@ -122,6 +123,8 @@ var volley;
             _super.call(this, pos, [0, 0], radius);
             this.color = color;
             this.keys = keys;
+            this.accel = [0, 900];
+            this.isJumping = false;
         }
         Player.prototype.render = function (ctx, state) {
             ctx.fillStyle = this.color;
@@ -129,14 +132,39 @@ var volley;
             ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI, true);
             ctx.fill();
         };
+        Player.prototype.update = function (dt, state) {
+            if (this.isJumping) {
+                if (this.pos[1] < state.dimensions[1]) {
+                    this.accelerate(dt);
+                }
+                else {
+                    this.speed[1] = 0;
+                    this.pos[1] = state.dimensions[1];
+                    this.isJumping = false;
+                }
+            }
+            this.pos[0] += this.speed[0] * dt;
+            this.pos[1] += this.speed[1] * dt;
+        };
+        Player.prototype.accelerate = function (dt) {
+            this.speed[0] += this.accel[0] * dt;
+            this.speed[1] += this.accel[1] * dt;
+        };
         Player.prototype.collideWith = function (other) { };
         Player.prototype.handleInput = function () {
             this.speed[0] = 0;
             if (ps.isKeyDown(this.keys[0])) {
-                this.speed[0] = -200;
+                this.speed[0] = -300;
             }
             else if (ps.isKeyDown(this.keys[1])) {
-                this.speed[0] = 200;
+                this.speed[0] = 300;
+            }
+            if (ps.isKeyDown(this.keys[2])) {
+                if (!this.isJumping) {
+                    this.isJumping = true;
+                    this.speed[1] = -300;
+                    this.pos[1] -= 1;
+                }
             }
         };
         return Player;
@@ -149,13 +177,13 @@ var volley;
 (function (volley) {
     var VolleyState = (function (_super) {
         __extends(VolleyState, _super);
-        function VolleyState(dimsensions, debug) {
-            _super.call(this, dimsensions);
-            this.dimsensions = dimsensions;
+        function VolleyState(dimensions, debug) {
+            _super.call(this, dimensions);
+            this.dimensions = dimensions;
             this.debug = debug;
             this.ball = new volley.Ball([500, 100], [200, 0], [0, 400], 50);
-            this.leftPlayer = new volley.Player([200, 768], "green", 50, ["a", "d"]);
-            this.rightPlayer = new volley.Player([890, 768], "blue", 50, ["LEFT", "RIGHT"]);
+            this.leftPlayer = new volley.Player([200, 768], "green", 50, ["a", "d", "w"]);
+            this.rightPlayer = new volley.Player([890, 768], "blue", 50, ["LEFT", "RIGHT", "UP"]);
         }
         VolleyState.prototype.render = function (ctx) {
             ctx.fillStyle = "black";

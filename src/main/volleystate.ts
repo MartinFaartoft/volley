@@ -8,11 +8,11 @@ namespace volley {
         leftPlayer: Player;
         rightPlayer: Player;
 
-        constructor(public dimsensions: number[], public debug: boolean) {
-            super(dimsensions);
+        constructor(public dimensions: number[], public debug: boolean) {
+            super(dimensions);
             this.ball = new Ball([500, 100], [200, 0], [0, 400], 50);
-            this.leftPlayer = new Player([200, 768], "green", 50, ["a", "d"]);
-            this.rightPlayer = new Player([890, 768], "blue", 50, ["LEFT", "RIGHT"]);
+            this.leftPlayer = new Player([200, 768], "green", 50, ["a", "d", "w"]);
+            this.rightPlayer = new Player([890, 768], "blue", 50, ["LEFT", "RIGHT", "UP"]);
         }
 
         render(ctx: CanvasRenderingContext2D) {

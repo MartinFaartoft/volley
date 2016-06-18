@@ -2,6 +2,9 @@
 
 namespace volley {
     export class Player extends ps.Entity implements ps.Collidable {
+        accel: number[] = [0, 900];
+        isJumping: boolean = false;
+
         constructor(pos: number[], public color: string, radius: number, public keys: string[]) {
             super(pos, [0, 0], radius);
         }
@@ -13,15 +16,43 @@ namespace volley {
             ctx.fill();
         }
 
+        update(dt: number, state: VolleyState) {
+            if (this.isJumping) {
+                if (this.pos[1] < state.dimensions[1]) {
+                    this.accelerate(dt);
+                } else { //jump is over
+                    this.speed[1] = 0;
+                    this.pos[1] = state.dimensions[1];
+                    this.isJumping = false;
+                }
+            }
+
+            this.pos[0] += this.speed[0] * dt;
+            this.pos[1] += this.speed[1] * dt;
+        }
+
+         accelerate(dt: number) {
+            this.speed[0] += this.accel[0] * dt;
+            this.speed[1] += this.accel[1] * dt;
+        }
+
         collideWith(other: ps.Collidable) {}
 
         handleInput() {
             this.speed[0] = 0;
             if (ps.isKeyDown(this.keys[0])) {
-                this.speed[0] = -200;
+                this.speed[0] = -300;
             }
             else if (ps.isKeyDown(this.keys[1])) {
-                this.speed[0] = 200;
+                this.speed[0] = 300;
+            }
+            
+            if (ps.isKeyDown(this.keys[2])) {
+                if (!this.isJumping) {
+                    this.isJumping = true;
+                    this.speed[1] = -300;
+                    this.pos[1] -= 1;
+                }
             }
         }
     }

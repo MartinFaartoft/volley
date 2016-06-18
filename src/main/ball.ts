@@ -1,4 +1,5 @@
 /// <reference path="piston-0.1.1.d.ts" />
+/// <reference path="volleystate.ts" />
 
 
 namespace volley {
@@ -40,7 +41,10 @@ namespace volley {
         checkWallCollisions(state: VolleyState) {
             //if overlapping floor and moving down
             if (this.pos[1] + this.radius >= state.dimensions[1] && this.speed[1] > 0) {
-                this.speed[1] = this.speed[1] * -1;
+                this.speed[1] *= -1;
+            } //if overlapping ceiling and moving up 
+            else if (this.pos[1] - this.radius < 0 && this.speed[1] < 0) {
+                this.speed[1] *= -1;
             }
 
             //if overlapping left wall and moving left
