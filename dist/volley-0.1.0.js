@@ -73,42 +73,65 @@ var volley;
                 return; //already handled
             }
             this.collided = .1;
-            var m0 = 25, m1 = 100; //masses
             var x0 = this.pos.x;
             var y0 = this.pos.y;
             var x1 = other.pos.x;
             var y1 = other.pos.y;
+            var pos0 = new ps.Vector(x0, y0);
+            var pos1 = new ps.Vector(x1, y1);
             //1: find unit normal and unit tangent vectors
+            var v_unit_normal = pos1.subtract(pos0).unit();
             var normal = [x1 - x0, y1 - y0];
             var normal_magnitude = this.magnitude(normal);
             var unit_normal = [
                 normal[0] / normal_magnitude,
                 normal[1] / normal_magnitude
             ];
+            //console.log("delta", v_unit_normal.x - unit_normal[0], v_unit_normal.y - unit_normal[1]);
+            var v_unit_tangent = v_unit_normal.tangent();
             var unit_tangent = [-unit_normal[1], unit_normal[0]];
+            //console.log("delta", v_unit_tangent.x - unit_tangent[0], v_unit_tangent.y - unit_tangent[1]);
             //2: create initial velocity vectors
             var v0 = [this.speed.x, this.speed.y];
             var v1 = [other.speed.x, other.speed.y];
             //3: calculate scalar velocities in the normal and tangential direction for both
+            var s_v0_n = v_unit_normal.dot(this.speed);
+            var s_v0_t = v_unit_tangent.dot(this.speed);
+            var s_v1_n = v_unit_normal.dot(other.speed);
+            var s_v1_t = v_unit_tangent.dot(other.speed);
             var scalar_v0_n = this.dotProduct(unit_normal, v0);
             var scalar_v0_t = this.dotProduct(unit_tangent, v0);
             var scalar_v1_n = this.dotProduct(unit_normal, v1);
             var scalar_v1_t = this.dotProduct(unit_tangent, v1);
+            //console.log(s_v0_n - scalar_v0_n, s_v0_t - scalar_v0_t, 
+            //s_v1_n - scalar_v1_n, s_v1_t - scalar_v1_t);
             //4: find the new tangential velocities after collisions
             var post_scalar_v0_t = scalar_v0_t;
             var post_scalar_v1_t = scalar_v1_t;
             //5: find new normal velocities
-            var post_scalar_v0_n = this.calculateNormalVelocity(scalar_v0_n, scalar_v1_n, m0, m1);
-            var post_scalar_v1_n = this.calculateNormalVelocity(scalar_v1_n, scalar_v0_n, m1, m0);
+            var p_s_v0_n = this.calculateNormalVelocity(s_v0_n, s_v1_n, this.mass, other.mass);
+            var p_s_v1_n = this.calculateNormalVelocity(s_v1_n, s_v0_n, other.mass, this.mass);
+            var post_scalar_v0_n = this.calculateNormalVelocity(scalar_v0_n, scalar_v1_n, this.mass, other.mass);
+            var post_scalar_v1_n = this.calculateNormalVelocity(scalar_v1_n, scalar_v0_n, other.mass, this.mass);
+            console.log(p_s_v0_n - post_scalar_v0_n, p_s_v1_n - post_scalar_v1_n);
             //6: convert scalar normal and tangential velocities into vectors
+            var p_v0_n = v_unit_normal.multiply(p_s_v0_n);
+            var p_v1_n = v_unit_normal.multiply(p_s_v1_n);
+            var p_v0_t = v_unit_tangent.multiply(scalar_v0_t);
+            var p_v1_t = v_unit_tangent.multiply(scalar_v1_t);
             var post_v0_n = [post_scalar_v0_n * unit_normal[0], post_scalar_v0_n * unit_normal[1]];
             var post_v1_n = [post_scalar_v1_n * unit_normal[0], post_scalar_v1_n * unit_normal[1]];
             var post_v0_t = [post_scalar_v0_t * unit_tangent[0], post_scalar_v0_t * unit_tangent[1]];
             var post_v1_t = [post_scalar_v1_t * unit_tangent[0], post_scalar_v1_t * unit_tangent[1]];
+            //console.log(p_v0_n, p_v1_n, p_v0_t, p_v1_t);
             //7: find final velocity vectors by adding normal and tangential components
+            var p_v0 = p_v0_n.add(p_v0_t);
+            var p_v1 = p_v1_n.add(p_v0_t);
             var post_v0 = this.add(post_v0_n, post_v0_t);
             var post_v1 = this.add(post_v1_n, post_v1_t);
-            this.speed = new ps.Vector(post_v0[0], post_v0[1]);
+            console.log(p_v0.subtract(new ps.Vector(post_v0[0], post_v0[1])));
+            this.speed = p_v0;
+            //this.speed = new ps.Vector(post_v0[0], post_v0[1]);
         };
         Ball.prototype.add = function (a, b) {
             return [a[0] + b[0], a[1] + b[1]];

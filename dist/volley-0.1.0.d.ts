@@ -12,7 +12,7 @@ declare namespace volley {
         accelerate(dt: number): void;
         checkNetCollision(state: VolleyState): void;
         checkWallCollisions(state: VolleyState): void;
-        collideWith(other: Player): void;
+        collideWith(other: ps.Collidable): void;
         add(a: number[], b: number[]): number[];
         magnitude(v: number[]): number;
         dotProduct(a: number[], b: number[]): number;
